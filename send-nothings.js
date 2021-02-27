@@ -14,9 +14,9 @@ const BN = require("bn.js");
 
 const app = require('express')();
 app.use(require('cors')());
-app.use(require('body-parser').json())
-
+app.use(require('body-parser').json());
 const myAddress = process.env.STX_ADDRESS;
+let nonce = 3;
 const fetch = require('node-fetch')
 app.post('/faucet', async (req, res) => {
   const {address} = req.body;
@@ -29,10 +29,13 @@ app.post('/faucet', async (req, res) => {
     senderKey: process.env.KEY,
     network: new StacksMainnet(),
     // fee: new BN(300),
-    nonce: await getNonce(myAddress, new StacksMainnet()),
+    nonce: new BN(nonce),
     postConditionMode: PostConditionMode.Allow,
   });
   const result = await broadcastTransaction(tx, new StacksMainnet());
+  if (!result.error) {
+    nonce ++;
+  }
   res.json(result);
 })
 
