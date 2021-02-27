@@ -1,10 +1,12 @@
 // const { cvToString, intCV } = require("@blockstack/stacks-transactions");
-const { principalCV } = require("@blockstack/stacks-transactions/lib/clarity/types/principalCV")
+const { principalCV } = require("@blockstack/stacks-transactions/lib/clarity/types/principalCV");
+const { AnchorMode, PostConditionMode } = require("@blockstack/stacks-transactions/lib/constants");
 const { StacksMainnet }  = require('@stacks/network')
 const {
   uintCV,
   makeContractCall,
-  broadcastTransaction
+  broadcastTransaction,
+  makeContractFungiblePostCondition
 }  = require('@stacks/transactions');
 require('dotenv').config();
 const BN = require("bn.js");
@@ -26,7 +28,8 @@ app.post('/faucet', async (req, res) => {
     senderKey: process.env.KEY,
     network: new StacksMainnet(),
     // fee: new BN(300),
-    // nonce: BN(0)
+    // nonce: BN(0),
+    postConditionMode: PostConditionMode.Allow,
   });
   const result = await broadcastTransaction(tx, new StacksMainnet());
   res.json(result);
