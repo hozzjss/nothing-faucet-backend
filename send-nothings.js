@@ -6,7 +6,8 @@ const {
   uintCV,
   makeContractCall,
   broadcastTransaction,
-  makeContractFungiblePostCondition
+  makeContractFungiblePostCondition,
+  getNonce
 }  = require('@stacks/transactions');
 require('dotenv').config();
 const BN = require("bn.js");
@@ -28,7 +29,7 @@ app.post('/faucet', async (req, res) => {
     senderKey: process.env.KEY,
     network: new StacksMainnet(),
     // fee: new BN(300),
-    // nonce: BN(0),
+    nonce: await getNonce('SP32AEEF6WW5Y0NMJ1S8SBSZDAY8R5J32NBZFPKKZ', new StacksMainnet()),
     postConditionMode: PostConditionMode.Allow,
   });
   const result = await broadcastTransaction(tx, new StacksMainnet());
