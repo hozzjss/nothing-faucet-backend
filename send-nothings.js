@@ -16,11 +16,32 @@ const app = require('express')();
 app.use(require('cors')());
 app.use(require('body-parser').json());
 const myAddress = process.env.STX_ADDRESS;
-let nonce = 3;
+let nonce = 0;
 const fetch = require('node-fetch')
+
+
+const getBalance = async (address) => {
+  const result = await fetch(`https://stacks-node-api.mainnet.stacks.co/extended/v1/address/${address}/balances`);
+  return result.json();
+}
 app.post('/faucet', async (req, res) => {
   const {address} = req.body;
-  
+  nonce = (await getNonce(myAddress, new StacksMainnet()))
+  const addressNothingBalance = await getBalance(address).then(data => {
+    const nothingBal = data.fungible_tokens[
+      'SP32AEEF6WW5Y0NMJ1S8SBSZDAY8R5J32NBZFPKKZ.micro-nthng::micro-nothing'
+    ];
+    if (nothingBal) {
+      return nothingBal.balance;
+    }
+    return 0;
+  })
+  if (addressNothingBalance >= 100) {
+    return res.status(400).json({
+      message: "Sorry you already have enough nothings!"
+    })
+  }
+
   const tx = await makeContractCall({
     contractAddress: 'SP32AEEF6WW5Y0NMJ1S8SBSZDAY8R5J32NBZFPKKZ',
     contractName: 'micro-nthng',
@@ -33,15 +54,12 @@ app.post('/faucet', async (req, res) => {
     postConditionMode: PostConditionMode.Allow,
   });
   const result = await broadcastTransaction(tx, new StacksMainnet());
-  if (!result.error) {
-    nonce ++;
-  }
+  nonce ++;
   res.json(result);
 })
 
 app.get('/faucet-balance', async (req, res) => {
-  const result = await fetch(`https://stacks-node-api.mainnet.stacks.co/extended/v1/address/${myAddress}/balances`);
-  const json = await result.json();
+  const json = await getBalance(myAddress)
   res.json(json)
 })
 
