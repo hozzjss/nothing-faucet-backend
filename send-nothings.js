@@ -38,6 +38,10 @@ app.get('/faucet-balance', async (req, res) => {
   res.json(json)
 })
 
+app.get('/', (req, res) => {
+  res.end('Sending nothing to everyone everywhere!');
+})
+
 app.listen(process.env.PORT, () => {
   console.log('listening on port', process.env.PORT)
 });
