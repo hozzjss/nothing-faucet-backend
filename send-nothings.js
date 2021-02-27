@@ -2,6 +2,17 @@
 const { principalCV } = require("@blockstack/stacks-transactions/lib/clarity/types/principalCV");
 const { AnchorMode, PostConditionMode } = require("@blockstack/stacks-transactions/lib/constants");
 const { StacksMainnet }  = require('@stacks/network')
+const low = require('lowdb')
+const FileSync = require('lowdb/adapters/FileSync')
+
+const adapter = new FileSync('db.json')
+const db = low(adapter)
+
+db.defaults({ addresses: [], count: 0 })
+  .write();
+
+
+
 const {
   uintCV,
   makeContractCall,
@@ -16,7 +27,7 @@ const app = require('express')();
 app.use(require('cors')());
 app.use(require('body-parser').json());
 const myAddress = process.env.STX_ADDRESS;
-let nonce = 0;
+// let nonce = 0;
 const fetch = require('node-fetch')
 
 
@@ -24,50 +35,69 @@ const getBalance = async (address) => {
   const result = await fetch(`https://stacks-node-api.mainnet.stacks.co/extended/v1/address/${address}/balances`);
   return result.json();
 }
-app.post('/faucet', async (req, res) => {
-  const {address} = req.body;
-  nonce = (await getNonce(myAddress, new StacksMainnet()))
-  const addressNothingBalance = await getBalance(address).then(data => {
-    const nothingBal = data.fungible_tokens[
-      'SP32AEEF6WW5Y0NMJ1S8SBSZDAY8R5J32NBZFPKKZ.micro-nthng::micro-nothing'
-    ];
-    if (nothingBal) {
-      return nothingBal.balance;
+(async () => {
+
+  let nonce = (await getNonce(myAddress, new StacksMainnet()))
+  app.post('/faucet', async (req, res) => {
+    const {address} = req.body;
+    
+  
+    const addressInDb = db.get('addresses').find({ id: address}).value();
+    // if (addressInDb) {
+    //   console.log(addressInDb);
+    // }
+  
+    // const addressNothingBalance = await getBalance(address).then(data => {
+    //   const nothingBal = data.fungible_tokens[
+    //     'SP32AEEF6WW5Y0NMJ1S8SBSZDAY8R5J32NBZFPKKZ.micro-nthng::micro-nothing'
+    //   ];
+    //   if (nothingBal) {
+    //     return nothingBal.balance;
+    //   }
+    //   return 0;
+    // })
+    if (addressInDb) {
+      return res.status(400).json({
+        message: "Sorry you already got enough nothings!"
+      })
     }
-    return 0;
+  
+    const tx = await makeContractCall({
+      contractAddress: 'SP32AEEF6WW5Y0NMJ1S8SBSZDAY8R5J32NBZFPKKZ',
+      contractName: 'micro-nthng',
+      functionName: 'transfer',
+      functionArgs: [principalCV(address), uintCV(100)],
+      senderKey: process.env.KEY,
+      network: new StacksMainnet(),
+      // fee: new BN(300),
+      nonce: new BN(nonce),
+      postConditionMode: PostConditionMode.Allow,
+    });
+    const result = await broadcastTransaction(tx, new StacksMainnet());
+    nonce ++;
+    console.log({nonce})
+    if (!result.error) {
+      db.get('addresses').push({id: address}).write()
+    }
+    if (result.error) {
+      return res.status(400).json({
+        message: "Please try again later"
+      })
+    }
+    res.json(result);
   })
-  if (addressNothingBalance >= 100) {
-    return res.status(400).json({
-      message: "Sorry you already have enough nothings!"
-    })
-  }
-
-  const tx = await makeContractCall({
-    contractAddress: 'SP32AEEF6WW5Y0NMJ1S8SBSZDAY8R5J32NBZFPKKZ',
-    contractName: 'micro-nthng',
-    functionName: 'transfer',
-    functionArgs: [principalCV(address), uintCV(100)],
-    senderKey: process.env.KEY,
-    network: new StacksMainnet(),
-    // fee: new BN(300),
-    nonce: new BN(nonce),
-    postConditionMode: PostConditionMode.Allow,
+  
+  app.get('/faucet-balance', async (req, res) => {
+    const json = await getBalance(myAddress)
+    res.json(json)
+  })
+  
+  app.get('/', (req, res) => {
+    res.end('Sending nothing to everyone everywhere!');
+  })
+  
+  app.listen(process.env.PORT, () => {
+    console.log('listening on port', process.env.PORT)
   });
-  const result = await broadcastTransaction(tx, new StacksMainnet());
-  nonce ++;
-  res.json(result);
-})
 
-app.get('/faucet-balance', async (req, res) => {
-  const json = await getBalance(myAddress)
-  res.json(json)
-})
-
-app.get('/', (req, res) => {
-  res.end('Sending nothing to everyone everywhere!');
-})
-
-app.listen(process.env.PORT, () => {
-  console.log('listening on port', process.env.PORT)
-});
-
+})()  
