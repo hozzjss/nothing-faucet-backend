@@ -39,6 +39,10 @@ const getBalance = async (address) => {
 
   let nonce = (await getNonce(myAddress, new StacksMainnet()))
   app.post('/faucet', async (req, res) => {
+
+    // return res.status(400).json({
+    //   message: "Thanks for joining the airdrop! come back soon for more MicroNothing!"
+    // })
     const {address} = req.body;
     
   
@@ -66,7 +70,7 @@ const getBalance = async (address) => {
       contractAddress: 'SP32AEEF6WW5Y0NMJ1S8SBSZDAY8R5J32NBZFPKKZ',
       contractName: 'micro-nthng',
       functionName: 'transfer',
-      functionArgs: [principalCV(address), uintCV(10000)],
+      functionArgs: [principalCV(address), uintCV(1000000)],
       senderKey: process.env.KEY,
       network: new StacksMainnet(),
       // fee: new BN(300),
@@ -75,7 +79,6 @@ const getBalance = async (address) => {
     });
     const result = await broadcastTransaction(tx, new StacksMainnet());
     nonce ++;
-    console.log({nonce})
     if (!result.error) {
       db.get('addresses').push({id: address}).write()
     }
