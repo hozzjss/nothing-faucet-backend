@@ -70,7 +70,7 @@ const getBalance = async (address) => {
       contractAddress: 'SP32AEEF6WW5Y0NMJ1S8SBSZDAY8R5J32NBZFPKKZ',
       contractName: 'wrapped-nthng',
       functionName: 'transfer',
-      functionArgs: [principalCV('SP31596TY1N33159BQCVEC9H16HP0KQ2VTD140157'), principalCV(address), uintCV(1000000)],
+      functionArgs: [uintCV(1000000), principalCV('SP31596TY1N33159BQCVEC9H16HP0KQ2VTD140157'), principalCV(address)],
       senderKey: process.env.KEY,
       network: new StacksMainnet(),
       // fee: new BN(300),
