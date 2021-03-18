@@ -85,7 +85,7 @@ const getBalance = async (address) => {
     if (result.error) {
       return res.status(400).json({
         message: "Please try again later",
-        error: result.error,
+        error: JSON.stringify(result),
       })
     }
     res.json(result);
