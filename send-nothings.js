@@ -68,9 +68,9 @@ const getBalance = async (address) => {
   
     const tx = await makeContractCall({
       contractAddress: 'SP32AEEF6WW5Y0NMJ1S8SBSZDAY8R5J32NBZFPKKZ',
-      contractName: 'micro-nthng',
+      contractName: 'wrapped-nthng',
       functionName: 'transfer',
-      functionArgs: [principalCV(address), uintCV(1000000)],
+      functionArgs: [principalCV('SP31596TY1N33159BQCVEC9H16HP0KQ2VTD140157'), principalCV(address), uintCV(1000000)],
       senderKey: process.env.KEY,
       network: new StacksMainnet(),
       // fee: new BN(300),
