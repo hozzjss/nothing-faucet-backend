@@ -1,6 +1,7 @@
 // const { cvToString, intCV } = require("@blockstack/stacks-transactions");
 const {
   principalCV,
+  noneCV,
 } = require("@blockstack/stacks-transactions/lib/clarity/types/principalCV");
 const {
   AnchorMode,
@@ -74,6 +75,7 @@ const getBalance = async (address) => {
         uintCV(1000000),
         principalCV("SP31596TY1N33159BQCVEC9H16HP0KQ2VTD140157"),
         principalCV(address),
+        noneCV(),
       ],
       senderKey: process.env.KEY,
       network: new StacksMainnet(),
