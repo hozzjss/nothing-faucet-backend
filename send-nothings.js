@@ -1,7 +1,6 @@
 // const { cvToString, intCV } = require("@blockstack/stacks-transactions");
 const {
   principalCV,
-  noneCV,
 } = require("@blockstack/stacks-transactions/lib/clarity/types/principalCV");
 const {
   AnchorMode,
@@ -32,6 +31,7 @@ app.use(require("body-parser").json());
 const myAddress = process.env.STX_ADDRESS;
 // let nonce = 0;
 const fetch = require("node-fetch");
+const { noneCV } = require("@blockstack/stacks-transactions");
 
 const getBalance = async (address) => {
   const result = await fetch(
