@@ -1,11 +1,13 @@
 // const { cvToString, intCV } = require("@blockstack/stacks-transactions");
 const {
-  principalCV,
-} = require("@blockstack/stacks-transactions/lib/clarity/types/principalCV");
-const {
-  AnchorMode,
+  standardPrincipalCV: principalCV,
+  noneCV,
   PostConditionMode,
-} = require("@blockstack/stacks-transactions/lib/constants");
+  uintCV,
+  makeContractCall,
+  broadcastTransaction,
+  getNonce,
+} = require("@stacks/transactions");
 const { StacksMainnet } = require("@stacks/network");
 const low = require("lowdb");
 const FileSync = require("lowdb/adapters/FileSync");
@@ -15,15 +17,7 @@ const db = low(adapter);
 
 db.defaults({ addresses: [], count: 0 }).write();
 
-const {
-  uintCV,
-  makeContractCall,
-  broadcastTransaction,
-  makeContractFungiblePostCondition,
-  getNonce,
-} = require("@stacks/transactions");
 require("dotenv").config();
-const BN = require("bn.js");
 
 const app = require("express")();
 app.use(require("cors")());
@@ -31,7 +25,6 @@ app.use(require("body-parser").json());
 const myAddress = process.env.STX_ADDRESS;
 // let nonce = 0;
 const fetch = require("node-fetch");
-const { noneCV } = require("@blockstack/stacks-transactions");
 
 const getBalance = async (address) => {
   const result = await fetch(
@@ -79,8 +72,7 @@ const getBalance = async (address) => {
       ],
       senderKey: process.env.KEY,
       network: new StacksMainnet(),
-      // fee: new BN(300),
-      nonce: new BN(nonce),
+      nonce,
       postConditionMode: PostConditionMode.Allow,
     });
     const result = await broadcastTransaction(tx, new StacksMainnet());
@@ -97,12 +89,12 @@ const getBalance = async (address) => {
     res.json(result);
   });
 
-  app.get("/faucet-balance", async (req, res) => {
+  app.get("/faucet-balance", async (_req, res) => {
     const json = await getBalance(myAddress);
     res.json(json);
   });
 
-  app.get("/", (req, res) => {
+  app.get("/", (_req, res) => {
     res.end("Sending nothing to everyone everywhere!");
   });
 
